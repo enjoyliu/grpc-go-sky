@@ -1,16 +1,16 @@
 // Copyright (c) Improbable Worlds Ltd, All Rights Reserved
 
-package skywalking
+package grpc_go_sky
 
 import (
 	"context"
 	"fmt"
+	"github.com/SkyAPM/go2sky"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	agentv3 "skywalking.apache.org/repo/goapi/collect/language/agent/v3"
-	"google.golang.org/grpc"
 	"strings"
 	"time"
-	"github.com/SkyAPM/go2sky"
 )
 
 const (
