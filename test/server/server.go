@@ -2,8 +2,12 @@ package main
 
 import (
 	"context"
+	grpc_go_sky "grpc-go-sky"
 	"log"
 	"net"
+
+	"github.com/SkyAPM/go2sky"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 
 	"github.com/SkyAPM/go2sky/reporter"
 	"google.golang.org/grpc"
@@ -11,9 +15,9 @@ import (
 )
 
 const (
-	oap         = "mockoap:19876"
-	port        = ":50051"
-	serviceName = "g-server"
+	oap         = "127.0.0.1:11800"
+	port        = "127.0.0.1:50051"
+	serviceName = "grpc-server"
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -39,11 +43,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	grpcSvr := grpc.NewServer()
+
+	serverName := serviceName
+	tracer, err := go2sky.NewTracer(serverName, go2sky.WithReporter(r))
+	if err != nil {
+		panic(err)
+	}
+	grpcSvr := grpc.NewServer(
+		grpc_middleware.WithUnaryServerChain(
+			grpc_go_sky.UnaryServerInterceptor(tracer)),
+	)
 
 	pb.RegisterGreeterServer(grpcSvr, &server{})
 	log.Printf("server listening at %v", lis.Addr())
 	if err := grpcSvr.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+	log.Println("started!")
 }
