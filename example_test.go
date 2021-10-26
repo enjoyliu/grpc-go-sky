@@ -19,11 +19,12 @@ const (
 	oap         = "mockoap:19876"
 	port        = ":50051"
 	serviceName = "grpc-server"
+	token = "this is a token"
 )
 
 func Test(t *testing.T) {
 	//Use gRPC reporter for production
-	r, err := reporter.NewLogReporter()
+	r, err := reporter.NewGRPCReporter(oap,reporter.WithAuthentication(token))
 	if err != nil {
 		panic(err)
 	}

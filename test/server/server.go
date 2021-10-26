@@ -18,6 +18,7 @@ const (
 	oap         = "127.0.0.1:11800"
 	port        = "127.0.0.1:50051"
 	serviceName = "grpc-server"
+	token = "this is a token"
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -33,7 +34,7 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 
 func main() {
 
-	r, err := reporter.NewGRPCReporter(oap)
+	r, err := reporter.NewGRPCReporter(oap,reporter.WithAuthentication(token))
 	if err != nil {
 		panic(err)
 	}
