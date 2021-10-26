@@ -13,8 +13,8 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"google.golang.org/grpc"
 	pb "google.golang.org/grpc/examples/helloworld/helloworld"
-
 )
+
 const (
 	oap         = "mockoap:19876"
 	port        = ":50051"
@@ -28,15 +28,14 @@ func Test(t *testing.T) {
 		panic(err)
 	}
 	defer r.Close()
-
-
+	// new server tracer
 	serverName := serviceName
 	tracer, err := go2sky.NewTracer(serverName, go2sky.WithReporter(r))
 	if err != nil {
 		panic(err)
 	}
-
-	go func(){
+	// run server
+	go func() {
 		lis, err := net.Listen("tcp", port)
 		if err != nil {
 			log.Fatalf("failed to listen: %v", err)
@@ -44,7 +43,7 @@ func Test(t *testing.T) {
 		grpcSvr := grpc.NewServer(grpc_middleware.WithUnaryServerChain(
 			UnaryServerInterceptor(tracer),
 		))
-		if err = grpcSvr.Serve(lis); err != nil{
+		if err = grpcSvr.Serve(lis); err != nil {
 			panic(err)
 		}
 	}()
@@ -55,12 +54,14 @@ func Test(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		//clientName := "grpc-client"
-		//tracer, err := go2sky.NewTracer(clientName, go2sky.WithReporter(r))
-		//if err != nil {
-		//	panic(err)
-		//}
-		opts := grpc.EmptyDialOption{}
+		// new client tracer
+		clientName := "grpc-client"
+		cliTracer, err := go2sky.NewTracer(clientName, go2sky.WithReporter(r))
+		if err != nil {
+			panic(err)
+		}
+		opts := grpc.WithChainUnaryInterceptor(grpc_middleware.ChainUnaryClient(
+			UnaryClientInterceptor(cliTracer)))
 		grpcCli, err := grpc.DialContext(
 			context.Background(),
 			"",
@@ -69,9 +70,9 @@ func Test(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-
+		// new client
 		grpcClient := pb.NewGreeterClient(grpcCli)
-
+		// send hello
 		resp, err := grpcClient.SayHello(context.Background(), &pb.HelloRequest{Name: "grpc-hello"})
 		if err != nil {
 			panic(err)
